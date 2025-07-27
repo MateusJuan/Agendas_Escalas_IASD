@@ -1,5 +1,11 @@
 {
-    "usuarios":[
-        
-    ]
+  "usuarios": [
+    {
+      "nome": "Mateus juan",
+      "email": "juanmateus565@gmail.com",
+      "dataNascimento": "24/01/2008",
+      "senha": "Mcmidori3208@",
+      "id": "8f6e"
+    }
+  ]
 }

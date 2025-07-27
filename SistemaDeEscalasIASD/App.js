@@ -3,8 +3,11 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 import CarregandoApp from "./telas/carregando";
 import Login from "./telas/login"
+import CriarConta from "./telas/criarConta";
+import InicioUsuario from "./telas/usuario/inicio";
+import Perfil from "./telas/usuario/perfil";
 
-const Stack = createNativeStackNavigator(); // CORRIGIDO: letra maiúscula
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
@@ -18,6 +21,21 @@ export default function App() {
         <Stack.Screen
           name="Login"
           component={Login}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="CriarConta"
+          component={CriarConta}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="InicioUsuario"
+          component={InicioUsuario}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Perfil"
+          component={Perfil}
           options={{headerShown: false}}
         />
       </Stack.Navigator>
