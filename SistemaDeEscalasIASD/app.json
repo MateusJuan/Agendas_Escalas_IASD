@@ -2,6 +2,27 @@
   "expo": {
     "name": "SistemaDeEscalasIASD",
     "slug": "SistemaDeEscalasIASD",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "img/Logo Circular.png",
+    "splash": {
+      "image": "img/Logo Circular.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "img/Logo Circular.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "web": {
+      "favicon": "./img/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "10c2f9c8-bf93-4271-878e-6cb847d54c62"
+      }
+    }
   }
 }
