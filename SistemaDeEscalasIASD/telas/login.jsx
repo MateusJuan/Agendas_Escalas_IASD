@@ -34,24 +34,11 @@ export default function Login({ navigation }) {
     ]).start();
   };
 
-  {/*const validarSenhaForte = (senha) => {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
-    return regex.test(senha);
-  };*/}
-
   async function login() {
     if (!email || !senha) {
       Alert.alert("Erro", "Preencha todos os campos.");
       return;
     }
-
-    {/*if (!validarSenhaForte(senha)) {
-      Alert.alert(
-        "Senha fraca",
-        "A senha deve conter pelo menos 6 caracteres, incluindo letras maiúsculas, minúsculas e números."
-      );
-      return;
-    }*/}
 
     try {
       const response = await axios.post("https://agendas-escalas-iasd-backend.onrender.com/api/login", {
@@ -60,9 +47,15 @@ export default function Login({ navigation }) {
       });
 
       const usuario = response.data;
+
       await AsyncStorage.setItem("usuarioLogado", JSON.stringify(usuario));
       Alert.alert("Sucesso", `Bem-vindo, ${usuario.nome}!`);
-      navigation.navigate("InicioUsuario", { user: usuario });
+
+      if (usuario.tipo === "adm") {
+        navigation.navigate("InicioAdm", { user: usuario });
+      } else {
+        navigation.navigate("InicioUsuario", { user: usuario });
+      }
 
     } catch (error) {
       Alert.alert("Erro", "Email ou senha incorretos.");
@@ -161,7 +154,6 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#f4f5f2",
     borderColor: "#ccc",
-    borderWidth: 1,
     paddingHorizontal: 15,
     paddingVertical: 12,
     marginBottom: 20,
@@ -175,9 +167,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f4f5f2",
     borderColor: "#ccc",
-    borderWidth: 1,
     paddingHorizontal: 15,
-    paddingVertical: 0,
     marginBottom: 20,
   },
   senhaInput: {
