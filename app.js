@@ -23,32 +23,34 @@ app.get("/api/usuarios", async (req, res) => {
   res.json(data);
 });
 
-  app.post("/api/usuarios", async (req, res) => {
-    const { nome, email, senha, dataNascimento } = req.body;
+app.post("/api/usuarios", async (req, res) => {
+  const { nome, email, senha, dataNascimento } = req.body;
 
-    try {
-      const hashedPassword = await bcrypt.hash(senha, 10);
+  try {
+    const hashedPassword = await bcrypt.hash(senha, 10);
 
-      const { data, error } = await supabase.from("usuarios").insert([
-        {
-          nome,
-          email,
-          senha: hashedPassword,
-          dataNascimento
-        },
-      ]);
+    const { data, error } = await supabase.from("usuarios").insert([
+      {
+        nome,
+        email,
+        senha: hashedPassword,
+        dataNascimento,
+        tipo: "usuario" // ← tipo padrão inserido aqui
+      },
+    ]);
 
-      if (error) {
-        return res.status(400).json({ error: error.message });
-      }
-
-      res.status(201).json(data);
-    } catch (err) {
-      res.status(500).json({ error: "Erro ao criar usuário." });
+    if (error) {
+      return res.status(400).json({ error: error.message });
     }
-  });
 
-  app.post("/api/login", async (req, res) => {
+    res.status(201).json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao criar usuário." });
+  }
+});
+
+
+app.post("/api/login", async (req, res) => {
   const { email, senha } = req.body;
 
   const { data: usuarios, error } = await supabase
