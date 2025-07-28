@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
+import bcrypt from "bcrypt";
+
 
 const app = express();
 app.use(cors());
@@ -21,45 +23,61 @@ app.get("/api/usuarios", async (req, res) => {
   res.json(data);
 });
 
-app.post("/api/usuarios", async (req, res) => {
-  const { nome, email, senha, dataNascimento } = req.body;
+  app.post("/api/usuarios", async (req, res) => {
+    const { nome, email, senha, dataNascimento } = req.body;
 
-  const { data, error } = await supabase.from("usuarios").insert([
-    {
-      nome,
-      email,
-      senha,
-      dataNascimento
-    },
-  ]);
+    try {
+      const hashedPassword = await bcrypt.hash(senha, 10);
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
-  res.status(201).json(data);
-});
+      const { data, error } = await supabase.from("usuarios").insert([
+        {
+          nome,
+          email,
+          senha: hashedPassword,
+          dataNascimento
+        },
+      ]);
 
+      if (error) {
+        return res.status(400).json({ error: error.message });
+      }
 
-// PUT: Atualizar usuário por ID
+      res.status(201).json(data);
+    } catch (err) {
+      res.status(500).json({ error: "Erro ao criar usuário." });
+    }
+  });
+
 app.put("/api/usuarios/:id", async (req, res) => {
   const { id } = req.params;
   const { nome, email, senha, dataNascimento } = req.body;
 
-  const { data, error } = await supabase
-    .from("usuarios")
-    .update({ nome, email, senha, dataNascimento })
-    .eq("id", id)
-    .select(); // necessário para retornar os dados atualizados
+  try {
+    let fieldsToUpdate = { nome, email, dataNascimento };
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
+    if (senha && senha.trim() !== "") {
+      const hashedPassword = await bcrypt.hash(senha, 10);
+      fieldsToUpdate.senha = hashedPassword;
+    }
+
+    const { data, error } = await supabase
+      .from("usuarios")
+      .update(fieldsToUpdate)
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: "Usuário não encontrado ou não atualizado." });
+    }
+
+    res.json(data[0]);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao atualizar usuário." });
   }
-
-  if (!data || data.length === 0) {
-    return res.status(404).json({ error: "Usuário não encontrado ou não atualizado." });
-  }
-
-  res.json(data[0]); // Agora com segurança
 });
 
 // DELETE: Excluir usuário por ID
