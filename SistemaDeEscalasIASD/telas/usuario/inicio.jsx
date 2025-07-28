@@ -36,13 +36,12 @@ export default function InicioUsuario({ navigation }) {
             <MaterialIcons name="calendar-month" size={24} color="#fff" />
             <View style={styles.cardItemText}>
               <Text style={styles.cardTitle}>Próximo Dia Escalado</Text>
-              <Text style={styles.cardDate}>27/07/2025</Text>
+              <Text style={styles.cardDate}>30/07/2025</Text>
             </View>
           </View>
 
           {/* Ícone e ministério */}
           <View style={styles.cardItem}>
-            {/* Ícone "church" não existe no Material Icons padrão, pode usar "account-balance" ou "church" se tiver */}
             <MaterialIcons name="church" size={24} color="#fff" />
             <View style={styles.cardItemText}>
               <Text style={styles.cardTitle}>Ministério</Text>

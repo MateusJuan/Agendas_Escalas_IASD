@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   SafeAreaView,
-  Alert,
   ActivityIndicator,
   Modal,
   TextInput,
@@ -22,21 +21,18 @@ export default function Perfil({ navigation }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Modal estado
   const [modalVisible, setModalVisible] = useState(false);
-
-  // Estados do formulário de edição
   const [nomeEdit, setNomeEdit] = useState("");
   const [emailEdit, setEmailEdit] = useState("");
   const [dataNascimentoEdit, setDataNascimentoEdit] = useState("");
   const [senhaEdit, setSenhaEdit] = useState("");
   const [confirmaSenhaEdit, setConfirmaSenhaEdit] = useState("");
-
-  // Estados para mostrar/ocultar senha
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const [confirmaSenhaVisivel, setConfirmaSenhaVisivel] = useState(false);
 
-  // Carrega usuário do AsyncStorage
+  const [confirmarExcluir, setConfirmarExcluir] = useState(false);
+  const [confirmarSair, setConfirmarSair] = useState(false);
+
   const carregarUsuario = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem("usuarioLogado");
@@ -51,7 +47,6 @@ export default function Perfil({ navigation }) {
       }
     } catch (e) {
       console.error("Erro ao carregar usuário:", e);
-      Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
     } finally {
       setLoading(false);
     }
@@ -61,7 +56,6 @@ export default function Perfil({ navigation }) {
     carregarUsuario();
   }, []);
 
-  // Abre modal e preenche campos com dados atuais
   const abrirModalEdicao = () => {
     if (user) {
       setNomeEdit(user.nome || "");
@@ -75,123 +69,65 @@ export default function Perfil({ navigation }) {
     }
   };
 
-  // Validação simples email
   const validarEmail = (email) => {
     const regex = /\S+@\S+\.\S+/;
     return regex.test(email);
   };
 
-  // Validação senha forte
   const validarSenhaForte = (senha) => {
-    if (!senha) return true; // se não alterar senha, não valida
+    if (!senha) return true;
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
     return regex.test(senha);
   };
 
-  // Salvar edição
   const salvarEdicao = async () => {
     if (!nomeEdit.trim() || !emailEdit.trim() || !dataNascimentoEdit.trim()) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos obrigatórios.");
+      alert("Preencha todos os campos obrigatórios.");
       return;
     }
     if (!validarEmail(emailEdit)) {
-      Alert.alert("Erro", "Informe um email válido.");
+      alert("Email inválido.");
       return;
     }
     if (!validarSenhaForte(senhaEdit)) {
-      Alert.alert(
-        "Senha fraca",
-        "A senha deve conter pelo menos 6 caracteres, incluindo letras maiúsculas, minúsculas e números."
-      );
+      alert("Senha fraca. Use ao menos 6 caracteres, letras maiúsculas e números.");
       return;
     }
     if (senhaEdit !== confirmaSenhaEdit) {
-      Alert.alert("Erro", "As senhas não coincidem.");
+      alert("As senhas não coincidem.");
       return;
     }
 
     try {
-      // Exemplo: Atualizar usuário via API
-      // Usar o ID do usuário atual para a requisição
       const response = await axios.put(
         `http://192.168.18.114:3000/usuarios/${user.id}`,
         {
           nome: nomeEdit,
           email: emailEdit,
           dataNascimento: dataNascimentoEdit,
-          senha: senhaEdit ? senhaEdit : user.senha, // se não alterar, mantém antiga
+          senha: senhaEdit ? senhaEdit : user.senha,
         }
       );
 
       if (response.status === 200) {
-        // Atualiza localmente
         const usuarioAtualizado = response.data;
         setUser(usuarioAtualizado);
-        await AsyncStorage.setItem(
-          "usuarioLogado",
-          JSON.stringify(usuarioAtualizado)
-        );
-        Alert.alert("Sucesso", "Dados atualizados com sucesso.");
+        await AsyncStorage.setItem("usuarioLogado", JSON.stringify(usuarioAtualizado));
         setModalVisible(false);
-      } else {
-        Alert.alert("Erro", "Não foi possível atualizar os dados.");
+        alert("Dados atualizados.");
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Erro", "Erro ao atualizar os dados.");
+      alert("Erro ao atualizar os dados.");
     }
   };
 
-  // Excluir conta
   const excluirConta = () => {
-    Alert.alert(
-      "Excluir Conta",
-      "Tem certeza que deseja excluir sua conta? Esta ação não pode ser desfeita.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await axios.delete(
-                `http://192.168.18.114:3000/usuarios/${user.id}`
-              );
-              await AsyncStorage.removeItem("usuarioLogado");
-              Alert.alert("Conta excluída", "Sua conta foi excluída.");
-              navigation.reset({
-                index: 0,
-                routes: [{ name: "Login" }],
-              });
-            } catch (error) {
-              console.error(error);
-              Alert.alert("Erro", "Não foi possível excluir a conta.");
-            }
-          },
-        },
-      ]
-    );
+    setConfirmarExcluir(true);
   };
 
   const handleLogout = () => {
-    Alert.alert("Logout", "Deseja sair do aplicativo?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Sair",
-        onPress: async () => {
-          try {
-            await AsyncStorage.removeItem("usuarioLogado");
-          } catch (e) {
-            console.error("Erro ao remover usuário:", e);
-          }
-          navigation.reset({
-            index: 0,
-            routes: [{ name: "Login" }],
-          });
-        },
-        style: "destructive",
-      },
-    ]);
+    setConfirmarSair(true);
   };
 
   if (loading) {
@@ -224,25 +160,17 @@ export default function Perfil({ navigation }) {
           </View>
         </View>
 
-        <View style={{ width: "100%", marginBottom: 20 }}>
-          <TouchableOpacity
-            style={styles.botaoEditar}
-            onPress={abrirModalEdicao}
-          >
-            <MaterialIcons name="edit" size={20} color="#fff" />
-            <Text style={styles.botaoTexto}>Editar Conta</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.botaoEditar} onPress={abrirModalEdicao}>
+          <MaterialIcons name="edit" size={20} color="#fff" />
+          <Text style={styles.botaoTexto}>Editar Conta</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <MaterialIcons name="logout" size={20} color="#fff" />
           <Text style={styles.logoutText}>Sair</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.botaoExcluir}
-          onPress={excluirConta}
-        >
+        <TouchableOpacity style={styles.botaoExcluir} onPress={excluirConta}>
           <MaterialIcons name="delete" size={20} color="#fff" />
           <Text style={styles.botaoTexto}>Excluir Conta</Text>
         </TouchableOpacity>
@@ -256,12 +184,7 @@ export default function Perfil({ navigation }) {
               <Text style={styles.modalTitle}>Editar Conta</Text>
 
               <Text style={styles.label}>Nome</Text>
-              <TextInput
-                style={styles.input}
-                value={nomeEdit}
-                onChangeText={setNomeEdit}
-                placeholder="Nome"
-              />
+              <TextInput style={styles.input} value={nomeEdit} onChangeText={setNomeEdit} />
 
               <Text style={styles.label}>Email</Text>
               <TextInput
@@ -270,7 +193,6 @@ export default function Perfil({ navigation }) {
                 onChangeText={setEmailEdit}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholder="email@example.com"
               />
 
               <Text style={styles.label}>Data de Nascimento</Text>
@@ -289,17 +211,9 @@ export default function Perfil({ navigation }) {
                   onChangeText={setSenhaEdit}
                   placeholder="********"
                   secureTextEntry={!senhaVisivel}
-                  autoCapitalize="none"
                 />
-                <TouchableOpacity
-                  onPress={() => setSenhaVisivel(!senhaVisivel)}
-                  style={styles.iconSenha}
-                >
-                  <Feather
-                    name={senhaVisivel ? "eye" : "eye-off"}
-                    size={20}
-                    color="#666"
-                  />
+                <TouchableOpacity onPress={() => setSenhaVisivel(!senhaVisivel)}>
+                  <Feather name={senhaVisivel ? "eye" : "eye-off"} size={20} />
                 </TouchableOpacity>
               </View>
 
@@ -311,32 +225,17 @@ export default function Perfil({ navigation }) {
                   onChangeText={setConfirmaSenhaEdit}
                   placeholder="********"
                   secureTextEntry={!confirmaSenhaVisivel}
-                  autoCapitalize="none"
                 />
-                <TouchableOpacity
-                  onPress={() => setConfirmaSenhaVisivel(!confirmaSenhaVisivel)}
-                  style={styles.iconSenha}
-                >
-                  <Feather
-                    name={confirmaSenhaVisivel ? "eye" : "eye-off"}
-                    size={20}
-                    color="#666"
-                  />
+                <TouchableOpacity onPress={() => setConfirmaSenhaVisivel(!confirmaSenhaVisivel)}>
+                  <Feather name={confirmaSenhaVisivel ? "eye" : "eye-off"} size={20} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: "#2e3e4e" }]}
-                  onPress={salvarEdicao}
-                >
+                <TouchableOpacity style={[styles.modalButton, { backgroundColor: "#2e3e4e" }]} onPress={salvarEdicao}>
                   <Text style={styles.modalButtonText}>Salvar</Text>
                 </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: "#999" }]}
-                  onPress={() => setModalVisible(false)}
-                >
+                <TouchableOpacity style={[styles.modalButton, { backgroundColor: "#999" }]} onPress={() => setModalVisible(false)}>
                   <Text style={styles.modalButtonText}>Cancelar</Text>
                 </TouchableOpacity>
               </View>
@@ -345,7 +244,78 @@ export default function Perfil({ navigation }) {
         </View>
       </Modal>
 
-      {/* Barra de navegação inferior */}
+      {/* Modal de confirmação - logout */}
+      <Modal visible={confirmarSair} transparent animationType="fade">
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Sair da conta?</Text>
+            <Text style={{ textAlign: "center", marginBottom: 20 }}>
+              Deseja realmente sair do aplicativo?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: "#2e3e4e" }]}
+                onPress={async () => {
+                  await AsyncStorage.removeItem("usuarioLogado");
+                  setConfirmarSair(false);
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: "Login" }],
+                  });
+                }}
+              >
+                <Text style={styles.modalButtonText}>Sair</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: "#999" }]}
+                onPress={() => setConfirmarSair(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de confirmação - excluir conta */}
+      <Modal visible={confirmarExcluir} transparent animationType="fade">
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Excluir Conta</Text>
+            <Text style={{ textAlign: "center", marginBottom: 20 }}>
+              Tem certeza que deseja excluir sua conta? Esta ação não poderá ser desfeita.
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: "#a32e2e" }]}
+                onPress={async () => {
+                  try {
+                    await axios.delete(`http://192.168.18.114:3000/usuarios/${user.id}`);
+                    await AsyncStorage.removeItem("usuarioLogado");
+                    setConfirmarExcluir(false);
+                    navigation.reset({
+                      index: 0,
+                      routes: [{ name: "Login" }],
+                    });
+                  } catch (error) {
+                    console.error(error);
+                    alert("Erro ao excluir conta.");
+                  }
+                }}
+              >
+                <Text style={styles.modalButtonText}>Excluir</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: "#999" }]}
+                onPress={() => setConfirmarExcluir(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <UsuarioInferior navigation={navigation} />
     </SafeAreaView>
   );
