@@ -39,6 +39,42 @@ app.post("/api/usuarios", async (req, res) => {
   res.status(201).json(data);
 });
 
+
+// PUT: Atualizar usuário por ID
+app.put("/api/usuarios/:id", async (req, res) => {
+  const { id } = req.params;
+  const { nome, email, senha, dataNascimento } = req.body;
+
+  const { data, error } = await supabase
+    .from("usuarios")
+    .update({ nome, email, senha, dataNascimento })
+    .eq("id", id)
+    .select(); // necessário para retornar os dados atualizados
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  if (!data || data.length === 0) {
+    return res.status(404).json({ error: "Usuário não encontrado ou não atualizado." });
+  }
+
+  res.json(data[0]); // Agora com segurança
+});
+
+// DELETE: Excluir usuário por ID
+app.delete("/api/usuarios/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const { error } = await supabase.from("usuarios").delete().eq("id", id);
+
+  if (error) {
+    return res.status(400).json({ error: error.message });
+  }
+
+  res.json({ message: "Usuário excluído com sucesso." });
+});
+
 app.listen(PORT, () => {
   console.log(`Backend rodando na porta ${PORT}`);
 });
