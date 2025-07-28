@@ -85,10 +85,10 @@ app.post("/api/login", async (req, res) => {
 // Atualizar usuário (com ou sem senha)
 app.put("/api/usuarios/:id", async (req, res) => {
   const { id } = req.params;
-  const { nome, email, senha, dataNascimento } = req.body;
+  const { nome, email, senha, dataNascimento, tipo } = req.body;
 
   try {
-    let fieldsToUpdate = { nome, email, dataNascimento };
+    let fieldsToUpdate = { nome, email, dataNascimento, tipo };
 
     if (senha && senha.trim() !== "") {
       const hashedPassword = await bcrypt.hash(senha, 10);
@@ -98,10 +98,11 @@ app.put("/api/usuarios/:id", async (req, res) => {
     const { data, error } = await supabase
       .from("usuarios")
       .update(fieldsToUpdate)
-      .eq("id", id)
+      .eq("id", Number(id)) // <--- importante!
       .select();
 
     if (error) return res.status(400).json({ error: error.message });
+
     if (!data || data.length === 0)
       return res.status(404).json({ error: "Usuário não encontrado." });
 
@@ -110,6 +111,7 @@ app.put("/api/usuarios/:id", async (req, res) => {
     res.status(500).json({ error: "Erro ao atualizar usuário." });
   }
 });
+
 
 // Deletar usuário por id
 app.delete("/api/usuarios/:id", async (req, res) => {
