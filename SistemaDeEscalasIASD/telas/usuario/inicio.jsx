@@ -1,18 +1,41 @@
-import React from "react";
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   Image,
+  ScrollView,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import UsuarioInferior from "../barras/usuarioinferior";
 
+// Dados simulados (corrigido com new Date(ano, mes, dia))
+const escalas = [
+  { data: new Date(2025, 6, 2), ministerio: "Sonoplastia" },
+  { data: new Date(2025, 6, 13), ministerio: "Sonoplastia" },
+  { data: new Date(2025, 6, 26), ministerio: "Sonoplastia" },
+  { data: new Date(2025, 6, 30), ministerio: "Sonoplastia" },
+];
+
+// Função para encontrar a próxima escala
+function getProximaEscala(escalas) {
+  const hoje = new Date();
+  const futuras = escalas
+    .map((item) => ({
+      ...item,
+      dataObj: item.data,
+    }))
+    .filter((item) => item.dataObj >= hoje)
+    .sort((a, b) => a.dataObj - b.dataObj);
+  return futuras[0] || escalas[0];
+}
+
 export default function InicioUsuario({ navigation }) {
+  const proxima = getProximaEscala(escalas);
+
   return (
     <View style={styles.container}>
-      {/* Topo com logo, busca e perfil */}
+      {/* TOPO */}
       <View style={styles.topo}>
         <Image
           source={require("../../img/Logo Circular.png")}
@@ -28,34 +51,59 @@ export default function InicioUsuario({ navigation }) {
         </View>
       </View>
 
-      {/* Cartão de próxima escala */}
+      {/* CARD COM PRÓXIMA ESCALA */}
       <View style={styles.cardContainer}>
         <View style={styles.card}>
-          {/* Ícone e data */}
           <View style={styles.cardItem}>
             <MaterialIcons name="calendar-month" size={24} color="#fff" />
             <View style={styles.cardItemText}>
               <Text style={styles.cardTitle}>Próximo Dia Escalado</Text>
-              <Text style={styles.cardDate}>30/07/2025</Text>
+              <Text style={styles.cardDate}>
+                {proxima.data.toLocaleDateString("pt-BR")}
+              </Text>
             </View>
           </View>
-
-          {/* Ícone e ministério */}
           <View style={styles.cardItem}>
             <MaterialIcons name="church" size={24} color="#fff" />
             <View style={styles.cardItemText}>
               <Text style={styles.cardTitle}>Ministério</Text>
-              <Text style={styles.cardDate}>Sonoplastia</Text>
+              <Text style={styles.cardDate}>{proxima.ministerio}</Text>
             </View>
           </View>
         </View>
       </View>
 
-      {/* Texto da escala mensal */}
+      {/* TÍTULO DA TABELA */}
       <Text style={styles.escalaTexto}>Minha Escala Mensal:</Text>
 
-      {/* Rodapé de navegação */}
-           <UsuarioInferior navigation={navigation} />
+      {/* TABELA */}
+      <View style={styles.tabela}>
+        {/* Cabeçalho */}
+        <View style={styles.tabelaLinhaHeader}>
+          <Text style={styles.tabelaHeaderTexto}>DATA</Text>
+          <Text style={styles.tabelaHeaderTexto}>DIA</Text>
+          <Text style={styles.tabelaHeaderTexto}>MINISTÉRIO</Text>
+        </View>
+
+        <ScrollView>
+          {escalas.map((item, index) => {
+            const dataObj = item.data;
+            const dataFormatada = dataObj.toLocaleDateString("pt-BR");
+            const diaSemana = dataObj.toLocaleDateString("pt-BR", { weekday: "long" });
+
+            return (
+              <View key={index} style={styles.tabelaLinha}>
+                <Text style={styles.tabelaTexto}>{dataFormatada}</Text>
+                <Text style={styles.tabelaTexto}>{diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)}</Text>
+                <Text style={styles.tabelaTexto}>{item.ministerio}</Text>
+              </View>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* RODAPÉ */}
+      <UsuarioInferior navigation={navigation} />
     </View>
   );
 }
@@ -136,23 +184,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
   },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    height: 70,
-    backgroundColor: "#2e3e4e",
+  tabela: {
+    marginTop: 10,
+    marginHorizontal: 10,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  tabelaLinhaHeader: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "#3c2f2f",
+    padding: 8,
   },
-  footerItem: {
-    alignItems: "center",
+  tabelaLinha: {
+    flexDirection: "row",
+    backgroundColor: "#a4a4a4",
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#fff",
   },
-  footerText: {
+  tabelaHeaderTexto: {
+    flex: 1,
+    fontWeight: "bold",
     color: "#fff",
+    textAlign: "center",
+    fontSize: 12,
+  },
+  tabelaTexto: {
+    flex: 1,
+    textAlign: "center",
     fontSize: 12,
   },
 });
