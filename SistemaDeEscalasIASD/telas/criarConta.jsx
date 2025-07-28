@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     justifyContent: "center",
-    backgroundColor: "#F8F8F5",
+    backgroundColor: "#f4f5f2",
   },
   titulo: {
     fontSize: 24,
@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
-    backgroundColor: "#f9f9f5",
+    backgroundColor: "#f4f5f2",
     padding: 10,
     borderRadius: 4,
     marginBottom: 15,
@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#ccc",
-    backgroundColor: "#f9f9f5",
+    backgroundColor: "#f4f5f2",
     borderRadius: 4,
     paddingRight: 10,
     marginBottom: 15,
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   botao: {
-    backgroundColor: "#34424A",
+    backgroundColor: "#344656",
     padding: 15,
     borderRadius: 4,
     alignItems: "center",

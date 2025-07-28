@@ -54,7 +54,7 @@ export default function Login({ navigation }) {
     }*/}
 
     try {
-      const response = await axios.get("https://agendas-escalas-iasd-backend.onrender.com/api/usuarios");
+      const response = await axios.get("https://agendas-escalas-iasd-backend.onrender.com/api/login");
       const usuarios = response.data;
 
       const usuarioEncontrado = usuarios.find(
@@ -161,11 +161,11 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   input: {
-    width: "100%",
-    backgroundColor: "#fff",
-    borderColor: "#bbb",
     borderWidth: 1,
-    borderRadius: 20,
+    width: "100%",
+    backgroundColor: "#f4f5f2",
+    borderColor: "#ccc",
+    borderWidth: 1,
     paddingHorizontal: 15,
     paddingVertical: 12,
     marginBottom: 20,
@@ -173,13 +173,13 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   senhaContainer: {
+    borderWidth: 1,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderColor: "#bbb",
+    backgroundColor: "#f4f5f2",
+    borderColor: "#ccc",
     borderWidth: 1,
-    borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: 0,
     marginBottom: 20,
@@ -196,9 +196,8 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   botao: {
-    backgroundColor: "#2d3e50",
+    backgroundColor: "#344656",
     paddingVertical: 14,
-    borderRadius: 12,
     width: "100%",
     alignItems: "center",
   },
