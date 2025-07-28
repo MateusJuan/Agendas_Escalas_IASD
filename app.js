@@ -23,27 +23,53 @@ app.get("/api/usuarios", async (req, res) => {
   res.json(data);
 });
 
-// Criar usuário com senha criptografada
-app.post("/api/usuarios", async (req, res) => {
-  const { nome, email, senha, dataNascimento } = req.body;
+// Função para converter data do formato "DD/MM/YYYY" para "YYYY-MM-DD"
+function converterDataParaISO(dataBR) {
+  if (!dataBR) return null;
+  const partes = dataBR.split("/");
+  if (partes.length !== 3) return null;
+  const [dia, mes, ano] = partes;
+  return `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
+}
 
+// Rota para criar usuário
+app.post("/api/usuarios", async (req, res) => {
   try {
+    const { nome, email, senha, dataNascimento, tipo } = req.body;
+
+    if (!nome || !email || !senha || !dataNascimento) {
+      return res.status(400).json({ error: "Campos obrigatórios ausentes." });
+    }
+
+    // Converte a data para ISO
+    const dataISO = converterDataParaISO(dataNascimento);
+    if (!dataISO) {
+      return res.status(400).json({ error: "Data de nascimento inválida." });
+    }
+
+    // Criptografa a senha
     const hashedPassword = await bcrypt.hash(senha, 10);
 
+    // Insere no banco
     const { data, error } = await supabase.from("usuarios").insert([
       {
         nome,
         email,
         senha: hashedPassword,
-        dataNascimento, // deve ser string ou Date compatível com Postgres date
-        tipo: "usuario",
+        dataNascimento: dataISO,
+        tipo: tipo || "usuario",
       },
     ]);
 
     if (error) return res.status(400).json({ error: error.message });
 
-    res.status(201).json(data);
+    // Retorna o usuário criado (sem senha)
+    const usuarioCriado = data[0];
+    delete usuarioCriado.senha;
+
+    res.status(201).json(usuarioCriado);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Erro ao criar usuário." });
   }
 });
