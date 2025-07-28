@@ -23,15 +23,6 @@ app.get("/api/usuarios", async (req, res) => {
   res.json(data);
 });
 
-// Função para converter data do formato "DD/MM/YYYY" para "YYYY-MM-DD"
-function converterDataParaISO(dataBR) {
-  if (!dataBR) return null;
-  const partes = dataBR.split("/");
-  if (partes.length !== 3) return null;
-  const [dia, mes, ano] = partes;
-  return `${ano}-${mes.padStart(2, "0")}-${dia.padStart(2, "0")}`;
-}
-
 // Rota para criar usuário
 app.post("/api/usuarios", async (req, res) => {
   try {
