@@ -12,3 +12,6 @@ https://agendas-escalas-iasd-backend.onrender.com/api/usuarios/:id
 
 Delet Usuarios:
 https://agendas-escalas-iasd-backend.onrender.com/api/usuarios/:id
+
+Escalas:
+https://agendas-escalas-iasd-backend.onrender.com/api/escalas
