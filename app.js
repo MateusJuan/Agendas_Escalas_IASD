@@ -13,7 +13,6 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const PORT = 3000;
 
-// Rota GET para listar todos usuários (útil para seu login)
 app.get("/api/usuarios", async (req, res) => {
   const { data, error } = await supabase.from("usuarios").select("*");
   if (error) {
@@ -22,19 +21,15 @@ app.get("/api/usuarios", async (req, res) => {
   res.json(data);
 });
 
-// Rota POST para criar usuários (se já tiver, ótimo!)
 app.post("/api/usuarios", async (req, res) => {
   const { nome, email, senha, dataNascimento } = req.body;
 
-  // Valide os dados aqui se quiser
-
-  // Insere na tabela "usuarios"
   const { data, error } = await supabase.from("usuarios").insert([
     {
       nome,
       email,
       senha,
-      data_nascimento: dataNascimento,
+      dataNascimento
     },
   ]);
 
