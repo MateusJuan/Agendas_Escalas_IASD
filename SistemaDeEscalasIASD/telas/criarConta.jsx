@@ -31,8 +31,7 @@ export default function CriarConta({ navigation }) {
         nome,
         email,
         senha,
-        dataNascimento,
-        tipo: "usuario",
+        dataNascimento
       });
 
       // Navegação direta para Login após sucesso
