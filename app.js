@@ -128,30 +128,33 @@ app.delete("/api/usuarios/:id", async (req, res) => {
 
 // Listar escalas com nome do usuário (join na tabela usuarios)
 app.get("/api/escalas", async (req, res) => {
-  const { data, error } = await supabase
-    .from("escalas")
-    .select(`
-      id,
-      data,
-      ministerio,
-      pessoa_id,
-      usuarios (nome)
-    `);
+  try {
+    const { data, error } = await supabase
+      .from("escalas")
+      .select(`
+        id,
+        data,
+        ministerio,
+        pessoa_id,
+        usuarios (nome)
+      `);
 
-  if (error) return res.status(400).json({ error: error.message });
+    if (error) return res.status(400).json({ error: error.message });
 
-  // Garantir que data é array, mesmo vazio
-  const escalasFormatadas = (data || []).map((item) => ({
-    id: item.id,
-    data: item.data,
-    ministerio: item.ministerio,
-    pessoa_id: item.pessoa_id,
-    pessoa_nome: item.usuarios?.nome || "Desconhecido",
-  }));
+    // Mapear para formato esperado pelo frontend
+    const escalasFormatadas = (data || []).map((item) => ({
+      id: item.id,
+      data: item.data,
+      ministerio: item.ministerio,
+      pessoa_id: item.pessoa_id,
+      pessoa_nome: item.usuarios?.nome || "Desconhecido",
+    }));
 
-  res.json(escalasFormatadas);
+    res.json(escalasFormatadas);
+  } catch (err) {
+    res.status(500).json({ error: "Erro interno ao listar escalas." });
+  }
 });
-
 
 // Criar nova escala
 app.post("/api/escalas", async (req, res) => {
@@ -161,29 +164,36 @@ app.post("/api/escalas", async (req, res) => {
     return res.status(400).json({ error: "Campos obrigatórios ausentes." });
   }
 
-  const { data, error } = await supabase.from("escalas").insert([
-    {
-      data: new Date(dataStr),
-      ministerio,
-      pessoa_id,
-    },
-  ]);
+  try {
+    const { data, error } = await supabase.from("escalas").insert([
+      {
+        data: dataStr, // enviar como string ISO direto
+        ministerio,
+        pessoa_id,
+      },
+    ]);
 
-  if (error) return res.status(400).json({ error: error.message });
+    if (error) return res.status(400).json({ error: error.message });
 
-  res.status(201).json(data);
+    res.status(201).json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Erro interno ao criar escala." });
+  }
 });
 
 // Deletar escala por ID
 app.delete("/api/escalas/:id", async (req, res) => {
   const { id } = req.params;
 
-  const { error } = await supabase.from("escalas").delete().eq("id", id);
-
-  if (error) return res.status(400).json({ error: error.message });
-
-  res.json({ message: "Escala excluída com sucesso." });
+  try {
+    const { error } = await supabase.from("escalas").delete().eq("id", id);
+    if (error) return res.status(400).json({ error: error.message });
+    res.json({ message: "Escala excluída com sucesso." });
+  } catch {
+    res.status(500).json({ error: "Erro interno ao deletar escala." });
+  }
 });
+
 
 app.listen(PORT, () => {
   console.log(`Backend rodando na porta ${PORT}`);
