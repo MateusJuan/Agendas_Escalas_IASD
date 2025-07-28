@@ -1,0 +1,5 @@
+Post Usuarios:
+https://agendas-escalas-iasd-backend.onrender.com/api/usuarios
+
+Get Usuarios:
+https://agendas-escalas-iasd-backend.onrender.com/api/usuarios
