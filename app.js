@@ -48,6 +48,32 @@ app.get("/api/usuarios", async (req, res) => {
     }
   });
 
+  app.post("/api/login", async (req, res) => {
+  const { email, senha } = req.body;
+
+  const { data: usuarios, error } = await supabase
+    .from("usuarios")
+    .select("*")
+    .eq("email", email);
+
+  if (error || !usuarios || usuarios.length === 0) {
+    return res.status(401).json({ error: "Email ou senha incorretos." });
+  }
+
+  const usuario = usuarios[0];
+
+  const senhaValida = await bcrypt.compare(senha, usuario.senha);
+
+  if (!senhaValida) {
+    return res.status(401).json({ error: "Email ou senha incorretos." });
+  }
+
+  // Senha válida: retorna dados do usuário (sem a senha)
+  const { senha: _, ...usuarioSemSenha } = usuario;
+  res.json(usuarioSemSenha);
+});
+
+
 app.put("/api/usuarios/:id", async (req, res) => {
   const { id } = req.params;
   const { nome, email, senha, dataNascimento } = req.body;
