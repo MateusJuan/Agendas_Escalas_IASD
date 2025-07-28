@@ -54,22 +54,18 @@ export default function Login({ navigation }) {
     }*/}
 
     try {
-      const response = await axios.get("https://agendas-escalas-iasd-backend.onrender.com/api/login");
-      const usuarios = response.data;
+      const response = await axios.post("https://agendas-escalas-iasd-backend.onrender.com/api/login", {
+        email,
+        senha,
+      });
 
-      const usuarioEncontrado = usuarios.find(
-        (usuario) => usuario.email === email && usuario.senha === senha
-      );
+      const usuario = response.data;
+      await AsyncStorage.setItem("usuarioLogado", JSON.stringify(usuario));
+      Alert.alert("Sucesso", `Bem-vindo, ${usuario.nome}!`);
+      navigation.navigate("InicioUsuario", { user: usuario });
 
-      if (usuarioEncontrado) {
-        await AsyncStorage.setItem("usuarioLogado", JSON.stringify(usuarioEncontrado));
-        Alert.alert("Sucesso", `Bem-vindo, ${usuarioEncontrado.nome}!`);
-        navigation.navigate("InicioUsuario", { user: usuarioEncontrado });
-      } else {
-        Alert.alert("Erro", "Email ou senha incorretos.");
-      }
     } catch (error) {
-      Alert.alert("Erro", "Não foi possível conectar ao servidor.");
+      Alert.alert("Erro", "Email ou senha incorretos.");
       console.error(error);
     }
   }
