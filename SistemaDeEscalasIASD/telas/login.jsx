@@ -34,10 +34,10 @@ export default function Login({ navigation }) {
     ]).start();
   };
 
-  const validarSenhaForte = (senha) => {
+  {/*const validarSenhaForte = (senha) => {
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
     return regex.test(senha);
-  };
+  };*/}
 
   async function login() {
     if (!email || !senha) {
@@ -45,13 +45,13 @@ export default function Login({ navigation }) {
       return;
     }
 
-    if (!validarSenhaForte(senha)) {
+    {/*if (!validarSenhaForte(senha)) {
       Alert.alert(
         "Senha fraca",
         "A senha deve conter pelo menos 6 caracteres, incluindo letras maiúsculas, minúsculas e números."
       );
       return;
-    }
+    }*/}
 
     try {
       const response = await axios.get("http://192.168.18.114:3000/usuarios");

@@ -74,11 +74,11 @@ export default function Perfil({ navigation }) {
     return regex.test(email);
   };
 
-  const validarSenhaForte = (senha) => {
+  {/*const validarSenhaForte = (senha) => {
     if (!senha) return true;
     const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
     return regex.test(senha);
-  };
+  };*/}
 
   const salvarEdicao = async () => {
     if (!nomeEdit.trim() || !emailEdit.trim() || !dataNascimentoEdit.trim()) {
@@ -89,10 +89,10 @@ export default function Perfil({ navigation }) {
       alert("Email inválido.");
       return;
     }
-    if (!validarSenhaForte(senhaEdit)) {
+    {/*if (!validarSenhaForte(senhaEdit)) {
       alert("Senha fraca. Use ao menos 6 caracteres, letras maiúsculas e números.");
       return;
-    }
+    }*/}
     if (senhaEdit !== confirmaSenhaEdit) {
       alert("As senhas não coincidem.");
       return;
