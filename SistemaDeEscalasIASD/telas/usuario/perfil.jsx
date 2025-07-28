@@ -100,7 +100,7 @@ export default function Perfil({ navigation }) {
 
     try {
       const response = await axios.put(
-        `http://192.168.18.114:3000/usuarios/${user.id}`,
+        `https://agendas-escalas-iasd-backend.onrender.com/api/usuarios/${user.id}`,
         {
           nome: nomeEdit,
           email: emailEdit,
@@ -290,7 +290,7 @@ export default function Perfil({ navigation }) {
                 style={[styles.modalButton, { backgroundColor: "#a32e2e" }]}
                 onPress={async () => {
                   try {
-                    await axios.delete(`http://192.168.18.114:3000/usuarios/${user.id}`);
+                    await axios.delete(`https://agendas-escalas-iasd-backend.onrender.com/api/usuarios/${user.id}`);
                     await AsyncStorage.removeItem("usuarioLogado");
                     setConfirmarExcluir(false);
                     navigation.reset({
