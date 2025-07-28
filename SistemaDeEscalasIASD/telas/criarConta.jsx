@@ -27,7 +27,7 @@ export default function CriarConta({ navigation }) {
     }
 
     try {
-      await axios.post("http://192.168.18.114:3000/usuarios", {
+      await axios.post("https://agendas-escalas-iasd-backend.onrender.com/api/usuarios", {
         nome,
         email,
         senha,

@@ -54,7 +54,7 @@ export default function Login({ navigation }) {
     }*/}
 
     try {
-      const response = await axios.get("http://192.168.18.114:3000/usuarios");
+      const response = await axios.get("https://agendas-escalas-iasd-backend.onrender.com/api/usuarios");
       const usuarios = response.data;
 
       const usuarioEncontrado = usuarios.find(
