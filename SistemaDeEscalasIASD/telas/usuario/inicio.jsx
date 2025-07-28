@@ -44,7 +44,7 @@ export default function InicioUsuario({ navigation }) {
         <View style={styles.searchContainer}>
           <MaterialIcons name="search" size={16} color="#6c6c6c" style={styles.searchIcon} />
           <TextInput
-            placeholder="Search here ..."
+            placeholder="Pesquise aqui..."
             placeholderTextColor="#6c6c6c"
             style={styles.input}
           />
