@@ -140,7 +140,8 @@ app.get("/api/escalas", async (req, res) => {
 
   if (error) return res.status(400).json({ error: error.message });
 
-  const escalasFormatadas = data.map((item) => ({
+  // Garantir que data é array, mesmo vazio
+  const escalasFormatadas = (data || []).map((item) => ({
     id: item.id,
     data: item.data,
     ministerio: item.ministerio,
@@ -150,6 +151,7 @@ app.get("/api/escalas", async (req, res) => {
 
   res.json(escalasFormatadas);
 });
+
 
 // Criar nova escala
 app.post("/api/escalas", async (req, res) => {
