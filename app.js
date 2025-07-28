@@ -3,7 +3,6 @@ import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
 import bcrypt from "bcrypt";
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -12,14 +11,14 @@ const supabaseUrl = "https://kiragcrvsovowvajvrgw.supabase.co";
 const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpcmFnY3J2c292b3d2YWp2cmd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM3MjIzNjMsImV4cCI6MjA2OTI5ODM2M30.kI1YLTtBYvrZlqUunNzk_XKNMPXhMBgo6KC0k4dctxM";
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 const PORT = 3000;
 
+// ==========================
+// USUÁRIOS
+// ==========================
 app.get("/api/usuarios", async (req, res) => {
   const { data, error } = await supabase.from("usuarios").select("*");
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
+  if (error) return res.status(400).json({ error: error.message });
   res.json(data);
 });
 
@@ -35,20 +34,17 @@ app.post("/api/usuarios", async (req, res) => {
         email,
         senha: hashedPassword,
         dataNascimento,
-        tipo: "usuario" // ← tipo padrão inserido aqui
+        tipo: "usuario",
       },
     ]);
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+    if (error) return res.status(400).json({ error: error.message });
 
     res.status(201).json(data);
   } catch (err) {
     res.status(500).json({ error: "Erro ao criar usuário." });
   }
 });
-
 
 app.post("/api/login", async (req, res) => {
   const { email, senha } = req.body;
@@ -63,18 +59,15 @@ app.post("/api/login", async (req, res) => {
   }
 
   const usuario = usuarios[0];
-
   const senhaValida = await bcrypt.compare(senha, usuario.senha);
 
   if (!senhaValida) {
     return res.status(401).json({ error: "Email ou senha incorretos." });
   }
 
-  // Senha válida: retorna dados do usuário (sem a senha)
   const { senha: _, ...usuarioSemSenha } = usuario;
   res.json(usuarioSemSenha);
 });
-
 
 app.put("/api/usuarios/:id", async (req, res) => {
   const { id } = req.params;
@@ -94,9 +87,7 @@ app.put("/api/usuarios/:id", async (req, res) => {
       .eq("id", id)
       .select();
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+    if (error) return res.status(400).json({ error: error.message });
 
     if (!data || data.length === 0) {
       return res.status(404).json({ error: "Usuário não encontrado ou não atualizado." });
@@ -108,17 +99,75 @@ app.put("/api/usuarios/:id", async (req, res) => {
   }
 });
 
-// DELETE: Excluir usuário por ID
 app.delete("/api/usuarios/:id", async (req, res) => {
   const { id } = req.params;
 
   const { error } = await supabase.from("usuarios").delete().eq("id", id);
 
-  if (error) {
-    return res.status(400).json({ error: error.message });
-  }
+  if (error) return res.status(400).json({ error: error.message });
 
   res.json({ message: "Usuário excluído com sucesso." });
+});
+
+// ==========================
+// ESCALAS
+// ==========================
+
+// Listar escalas com nome do usuário (JOIN)
+app.get("/api/escalas", async (req, res) => {
+  const { data, error } = await supabase
+    .from("escalas")
+    .select(`
+      id,
+      data,
+      ministerio,
+      pessoa_id,
+      usuarios (nome)
+    `);
+
+  if (error) return res.status(400).json({ error: error.message });
+
+  const escalasFormatadas = data.map((item) => ({
+    id: item.id,
+    data: item.data,
+    ministerio: item.ministerio,
+    pessoa_id: item.pessoa_id,
+    pessoa_nome: item.usuarios?.nome || "Desconhecido",
+  }));
+
+  res.json(escalasFormatadas);
+});
+
+// Criar nova escala
+app.post("/api/escalas", async (req, res) => {
+  const { data: dataStr, ministerio, pessoa_id } = req.body;
+
+  if (!dataStr || !ministerio || !pessoa_id) {
+    return res.status(400).json({ error: "Campos obrigatórios ausentes." });
+  }
+
+  const { data, error } = await supabase.from("escalas").insert([
+    {
+      data: new Date(dataStr),
+      ministerio,
+      pessoa_id,
+    },
+  ]);
+
+  if (error) return res.status(400).json({ error: error.message });
+
+  res.status(201).json(data);
+});
+
+// Deletar escala por ID
+app.delete("/api/escalas/:id", async (req, res) => {
+  const { id } = req.params;
+
+  const { error } = await supabase.from("escalas").delete().eq("id", id);
+
+  if (error) return res.status(400).json({ error: error.message });
+
+  res.json({ message: "Escala excluída com sucesso." });
 });
 
 app.listen(PORT, () => {
