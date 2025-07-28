@@ -22,8 +22,7 @@ app.get("/api/usuarios", async (req, res) => {
   if (error) return res.status(400).json({ error: error.message });
   res.json(data);
 });
-
-// Rota para criar usuário
+//criar usuarios
 app.post("/api/usuarios", async (req, res) => {
   try {
     const { nome, email, senha, dataNascimento, tipo } = req.body;
@@ -32,36 +31,30 @@ app.post("/api/usuarios", async (req, res) => {
       return res.status(400).json({ error: "Campos obrigatórios ausentes." });
     }
 
-    // Converte a data para ISO
-    const dataISO = converterDataParaISO(dataNascimento);
-    if (!dataISO) {
-      return res.status(400).json({ error: "Data de nascimento inválida." });
-    }
-
     // Criptografa a senha
     const hashedPassword = await bcrypt.hash(senha, 10);
 
-    // Insere no banco
+    // Insere no Supabase
     const { data, error } = await supabase.from("usuarios").insert([
       {
         nome,
         email,
         senha: hashedPassword,
-        dataNascimento: dataISO,
+        dataNascimento, // já vem como texto
         tipo: tipo || "usuario",
       },
     ]);
 
-    if (error) return res.status(400).json({ error: error.message });
+    if (error) {
+      console.error("Erro do Supabase:", error);
+      return res.status(500).json({ error: error.message });
+    }
 
-    // Retorna o usuário criado (sem senha)
-    const usuarioCriado = data[0];
-    delete usuarioCriado.senha;
+    res.status(201).json({ message: "Usuário criado com sucesso!", data });
 
-    res.status(201).json(usuarioCriado);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao criar usuário." });
+    console.error("Erro inesperado:", err);
+    res.status(500).json({ error: "Erro interno ao criar usuário." });
   }
 });
 
