@@ -8,20 +8,22 @@ app.use(cors());
 app.use(express.json());
 
 const supabaseUrl = "https://kiragcrvsovowvajvrgw.supabase.co";
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpcmFnY3J2c292b3d2YWp2cmd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM3MjIzNjMsImV4cCI6MjA2OTI5ODM2M30.kI1YLTtBYvrZlqUunNzk_XKNMPXhMBgo6KC0k4dctxM";
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpcmFnY3J2c292b3d2YWp2cmd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM3MjIzNjMsImV4cCI6MjA2OTI5ODM2M30.kI1YLTtBYvrZlqUunNzk_XKNMPXhMBgo6KC0k4dctxM";
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 const PORT = 3000;
 
-// ==========================
-// USUÁRIOS
-// ==========================
+// === USUÁRIOS ===
+
+// Listar todos usuários
 app.get("/api/usuarios", async (req, res) => {
   const { data, error } = await supabase.from("usuarios").select("*");
   if (error) return res.status(400).json({ error: error.message });
   res.json(data);
 });
 
+// Criar usuário com senha criptografada
 app.post("/api/usuarios", async (req, res) => {
   const { nome, email, senha, dataNascimento } = req.body;
 
@@ -33,7 +35,7 @@ app.post("/api/usuarios", async (req, res) => {
         nome,
         email,
         senha: hashedPassword,
-        dataNascimento,
+        dataNascimento, // deve ser string ou Date compatível com Postgres date
         tipo: "usuario",
       },
     ]);
@@ -46,6 +48,7 @@ app.post("/api/usuarios", async (req, res) => {
   }
 });
 
+// Login (autenticação)
 app.post("/api/login", async (req, res) => {
   const { email, senha } = req.body;
 
@@ -69,6 +72,7 @@ app.post("/api/login", async (req, res) => {
   res.json(usuarioSemSenha);
 });
 
+// Atualizar usuário (com ou sem senha)
 app.put("/api/usuarios/:id", async (req, res) => {
   const { id } = req.params;
   const { nome, email, senha, dataNascimento } = req.body;
@@ -88,10 +92,8 @@ app.put("/api/usuarios/:id", async (req, res) => {
       .select();
 
     if (error) return res.status(400).json({ error: error.message });
-
-    if (!data || data.length === 0) {
-      return res.status(404).json({ error: "Usuário não encontrado ou não atualizado." });
-    }
+    if (!data || data.length === 0)
+      return res.status(404).json({ error: "Usuário não encontrado." });
 
     res.json(data[0]);
   } catch (err) {
@@ -99,6 +101,7 @@ app.put("/api/usuarios/:id", async (req, res) => {
   }
 });
 
+// Deletar usuário por id
 app.delete("/api/usuarios/:id", async (req, res) => {
   const { id } = req.params;
 
@@ -109,11 +112,9 @@ app.delete("/api/usuarios/:id", async (req, res) => {
   res.json({ message: "Usuário excluído com sucesso." });
 });
 
-// ==========================
-// ESCALAS
-// ==========================
+// === ESCALAS ===
 
-// Listar escalas com nome do usuário (JOIN)
+// Listar escalas com nome do usuário (join na tabela usuarios)
 app.get("/api/escalas", async (req, res) => {
   const { data, error } = await supabase
     .from("escalas")
