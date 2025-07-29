@@ -190,7 +190,9 @@ export default function InicioAdm({ navigation, route }) {
       </View>
 
       {/* MINHA ESCALA MENSAL */}
-      <Text style={styles.escalaTexto}>Minha Escala Mensal:</Text>
+      <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 15, marginTop: 20 }}>
+        <Text style={styles.escalaTexto}>Minha Escala Mensal:</Text>
+      </View>
       <View style={styles.tabela}>
         <View style={styles.tabelaLinhaHeader}>
           <Text style={styles.tabelaHeaderTexto}>MÊS</Text>
