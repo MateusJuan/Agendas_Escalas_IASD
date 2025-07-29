@@ -18,16 +18,20 @@ export default function InicioAdm({ navigation, route }) {
   const [escalas, setEscalas] = useState(null);
   const [search, setSearch] = useState("");
 
+  // Função para converter data do formato "dd/MM/yyyy" para Date
+  function parseDataBR(dataStr) {
+    const [dia, mes, ano] = dataStr.split("/");
+    return new Date(ano, mes - 1, dia);
+  }
+
   useEffect(() => {
     async function loadUser() {
       if (!user) {
-        // tenta carregar do AsyncStorage se não veio na rota
         try {
           const jsonValue = await AsyncStorage.getItem("usuarioLogado");
           if (jsonValue != null) {
             setUser(JSON.parse(jsonValue));
           } else {
-            // redireciona para login se não achou usuário
             Alert.alert("Usuário não encontrado", "Faça login novamente.");
             navigation.navigate("Login");
           }
@@ -48,9 +52,10 @@ export default function InicioAdm({ navigation, route }) {
         );
         const data = await res.json();
 
+        // converte a data string para Date usando parseDataBR
         const escalasComData = data.map((e) => ({
           ...e,
-          data: new Date(e.data),
+          data: parseDataBR(e.data),
         }));
 
         setEscalas(escalasComData);
@@ -86,6 +91,7 @@ export default function InicioAdm({ navigation, route }) {
   const mesAtual = hoje.getMonth();
   const anoAtual = hoje.getFullYear();
 
+  // Filtra escalas do usuário para o mês e ano atual
   const escalasUsuarioMes = escalas.filter(
     (e) =>
       e.pessoa_id === user.id &&
@@ -93,14 +99,17 @@ export default function InicioAdm({ navigation, route }) {
       e.data.getFullYear() === anoAtual
   );
 
+  // Ordena próximas escalas do usuário
   const futuras = escalasUsuarioMes.filter((e) => e.data >= hoje);
   futuras.sort((a, b) => a.data - b.data);
   const proxima = futuras[0] || escalasUsuarioMes[0] || null;
 
+  // Escalas gerais do mês (todos os usuários)
   const escalasGeralMes = escalas.filter(
     (e) => e.data.getMonth() === mesAtual && e.data.getFullYear() === anoAtual
   );
 
+  // Filtro da busca para escalas do usuário
   const escalasFiltradas = escalasUsuarioMes.filter((e) =>
     e.ministerio.toLowerCase().includes(search.toLowerCase())
   );
