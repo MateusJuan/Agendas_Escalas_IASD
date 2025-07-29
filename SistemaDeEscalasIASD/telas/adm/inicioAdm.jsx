@@ -7,6 +7,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Modal,
+  TouchableOpacity,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import AdmInferior from "../barras/adminferior";
@@ -18,7 +20,12 @@ export default function InicioAdm({ navigation, route }) {
   const [escalas, setEscalas] = useState(null);
   const [search, setSearch] = useState("");
 
-  // Função para converter data do formato "dd/MM/yyyy" para Date
+  // Modal
+  const [modalVisible, setModalVisible] = useState(false);
+  const [novaData, setNovaData] = useState("");
+  const [novoUsuarioId, setNovoUsuarioId] = useState("");
+  const [novoMinisterio, setNovoMinisterio] = useState("");
+
   function parseDataBR(dataStr) {
     const [dia, mes, ano] = dataStr.split("/");
     return new Date(ano, mes - 1, dia);
@@ -51,13 +58,10 @@ export default function InicioAdm({ navigation, route }) {
           "https://agendas-escalas-iasd-backend.onrender.com/api/escalas"
         );
         const data = await res.json();
-
-        // converte a data string para Date usando parseDataBR
         const escalasComData = data.map((e) => ({
           ...e,
           data: parseDataBR(e.data),
         }));
-
         setEscalas(escalasComData);
       } catch (error) {
         Alert.alert("Erro", "Não foi possível carregar as escalas.");
@@ -65,7 +69,40 @@ export default function InicioAdm({ navigation, route }) {
       }
     }
     carregarEscalas();
-  }, []);
+  }, [modalVisible]); // recarrega ao fechar o modal
+
+  async function adicionarEscala() {
+    if (!novaData || !novoUsuarioId || !novoMinisterio) {
+      Alert.alert("Erro", "Preencha todos os campos.");
+      return;
+    }
+
+    try {
+      const res = await fetch("https://agendas-escalas-iasd-backend.onrender.com/api/escalas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          data: novaData,
+          ministerio: novoMinisterio,
+          pessoa_id: parseInt(novoUsuarioId),
+        }),
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        Alert.alert("Sucesso", "Escala adicionada com sucesso!");
+        setModalVisible(false);
+        setNovaData("");
+        setNovoUsuarioId("");
+        setNovoMinisterio("");
+      } else {
+        Alert.alert("Erro", result.error || "Falha ao adicionar escala.");
+      }
+    } catch (e) {
+      Alert.alert("Erro", "Erro ao conectar com o servidor.");
+    }
+  }
 
   if (!user || !user.id) {
     return (
@@ -79,9 +116,7 @@ export default function InicioAdm({ navigation, route }) {
 
   if (escalas === null) {
     return (
-      <View
-        style={[styles.container, { justifyContent: "center", alignItems: "center" }]}
-      >
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
         <ActivityIndicator size="large" color="#2e3e4e" />
       </View>
     );
@@ -91,7 +126,6 @@ export default function InicioAdm({ navigation, route }) {
   const mesAtual = hoje.getMonth();
   const anoAtual = hoje.getFullYear();
 
-  // Filtra escalas do usuário para o mês e ano atual
   const escalasUsuarioMes = escalas.filter(
     (e) =>
       e.pessoa_id === user.id &&
@@ -99,17 +133,14 @@ export default function InicioAdm({ navigation, route }) {
       e.data.getFullYear() === anoAtual
   );
 
-  // Ordena próximas escalas do usuário
   const futuras = escalasUsuarioMes.filter((e) => e.data >= hoje);
   futuras.sort((a, b) => a.data - b.data);
   const proxima = futuras[0] || escalasUsuarioMes[0] || null;
 
-  // Escalas gerais do mês (todos os usuários)
   const escalasGeralMes = escalas.filter(
     (e) => e.data.getMonth() === mesAtual && e.data.getFullYear() === anoAtual
   );
 
-  // Filtro da busca para escalas do usuário
   const escalasFiltradas = escalasUsuarioMes.filter((e) =>
     e.ministerio.toLowerCase().includes(search.toLowerCase())
   );
@@ -123,12 +154,7 @@ export default function InicioAdm({ navigation, route }) {
           style={styles.logo}
         />
         <View style={styles.searchContainer}>
-          <MaterialIcons
-            name="search"
-            size={16}
-            color="#6c6c6c"
-            style={styles.searchIcon}
-          />
+          <MaterialIcons name="search" size={16} color="#6c6c6c" style={styles.searchIcon} />
           <TextInput
             placeholder="Pesquisar ministério"
             placeholderTextColor="#6c6c6c"
@@ -181,7 +207,6 @@ export default function InicioAdm({ navigation, route }) {
             const dataObj = item.data;
             const mes = dataObj.toLocaleDateString("pt-BR", { month: "long" });
             const dia = dataObj.getDate();
-
             return (
               <View key={index} style={styles.tabelaLinha}>
                 <Text style={styles.tabelaTexto}>
@@ -195,8 +220,17 @@ export default function InicioAdm({ navigation, route }) {
         </ScrollView>
       </View>
 
-      {/* ESCALA GERAL DO MÊS */}
-      <Text style={styles.escalaTexto}>Escala Geral do Mês:</Text>
+      {/* ESCALA GERAL DO MÊS + BOTÃO */}
+      <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 15, marginTop: 20 }}>
+        <Text style={styles.escalaTexto}>Escala Geral do Mês:</Text>
+        <MaterialIcons
+          name="add-circle"
+          size={24}
+          color="#2e3e4e"
+          style={{ marginLeft: 8 }}
+          onPress={() => setModalVisible(true)}
+        />
+      </View>
       <View style={styles.tabela}>
         <View style={styles.tabelaLinhaHeader}>
           <Text style={styles.tabelaHeaderTexto}>MÊS</Text>
@@ -213,7 +247,6 @@ export default function InicioAdm({ navigation, route }) {
             const dataObj = item.data;
             const mes = dataObj.toLocaleDateString("pt-BR", { month: "long" });
             const dia = dataObj.getDate();
-
             return (
               <View key={index} style={styles.tabelaLinha}>
                 <Text style={styles.tabelaTexto}>
@@ -227,6 +260,45 @@ export default function InicioAdm({ navigation, route }) {
         </ScrollView>
       </View>
 
+      {/* MODAL */}
+      {modalVisible && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>Adicionar Escala</Text>
+
+            <Text>Data (yyyy-mm-dd):</Text>
+            <TextInput
+              value={novaData}
+              onChangeText={setNovaData}
+              placeholder="Ex: 2025-08-10"
+              style={styles.modalInput}
+            />
+
+            <Text>ID do Usuário:</Text>
+            <TextInput
+              value={novoUsuarioId}
+              onChangeText={setNovoUsuarioId}
+              placeholder="Ex: 6"
+              keyboardType="numeric"
+              style={styles.modalInput}
+            />
+
+            <Text>Ministério:</Text>
+            <TextInput
+              value={novoMinisterio}
+              onChangeText={setNovoMinisterio}
+              placeholder="Ex: Sonoplastia"
+              style={styles.modalInput}
+            />
+
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 }}>
+              <Text style={{ color: "#d00", fontWeight: "bold" }} onPress={() => setModalVisible(false)}>Cancelar</Text>
+              <Text style={{ color: "#007aff", fontWeight: "bold" }} onPress={adicionarEscala}>Salvar</Text>
+            </View>
+          </View>
+        </View>
+      )}
+
       {/* RODAPÉ */}
       <AdmInferior navigation={navigation} route={{ params: { user } }} />
     </View>
@@ -234,10 +306,7 @@ export default function InicioAdm({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f3f3ef",
-  },
+  container: { flex: 1, backgroundColor: "#f3f3ef" },
   topo: {
     backgroundColor: "#2e3e4e",
     flexDirection: "row",
@@ -248,11 +317,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
-  logo: {
-    width: 50,
-    height: 50,
-    resizeMode: "contain",
-  },
+  logo: { width: 50, height: 50, resizeMode: "contain" },
   searchContainer: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -263,18 +328,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     height: 35,
   },
-  searchIcon: {
-    marginRight: 5,
-  },
-  input: {
-    flex: 1,
-    height: "100%",
-    fontSize: 14,
-  },
-  cardContainer: {
-    paddingHorizontal: 20,
-    marginTop: 20,
-  },
+  searchIcon: { marginRight: 5 },
+  input: { flex: 1, height: "100%", fontSize: 14 },
+  cardContainer: { paddingHorizontal: 20, marginTop: 20 },
   card: {
     backgroundColor: "#2e3e4e",
     borderRadius: 20,
@@ -286,29 +342,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#2e3e4e",
   },
-  cardItem: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  cardItemText: {
-    marginTop: 5,
-    alignItems: "center",
-  },
-  cardTitle: {
-    color: "#fff",
-    fontSize: 10,
-  },
-  cardDate: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "bold",
-  },
-  escalaTexto: {
-    marginTop: 20,
-    marginLeft: 15,
-    fontSize: 14,
-    fontWeight: "500",
-  },
+  cardItem: { alignItems: "center", justifyContent: "center" },
+  cardItemText: { marginTop: 5, alignItems: "center" },
+  cardTitle: { color: "#fff", fontSize: 10 },
+  cardDate: { color: "#fff", fontSize: 13, fontWeight: "bold" },
+  escalaTexto: { fontSize: 14, fontWeight: "500" },
   tabela: {
     marginTop: 10,
     marginHorizontal: 10,
@@ -340,5 +378,27 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 12,
     color: "#000",
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "100%",
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 8,
+    marginBottom: 10,
+    backgroundColor: "#f9f9f9",
   },
 });
