@@ -14,7 +14,7 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import AdmInferior from "../barras/usuarioinferior";
+import AdmInferior from "../barras/adminferior";
 import axios from "axios";
 
 export default function Perfil({ navigation }) {

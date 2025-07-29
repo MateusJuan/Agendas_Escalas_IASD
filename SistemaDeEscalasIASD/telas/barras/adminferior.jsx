@@ -1,13 +1,15 @@
-import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 
-export default function UsuarioInferior({ navigation }) {
+export default function AdmInferior({ navigation, route }) {
+  // Pegue o user dos params, se existir
+  const user = route?.params?.user;
+
   return (
     <View style={styles.footer}>
       <TouchableOpacity
         style={styles.footerItem}
-        onPress={() => navigation.navigate("InicioAdm")}
+        onPress={() => navigation.navigate("InicioAdm", { user })}
       >
         <MaterialIcons name="home" size={24} color="#fff" />
         <Text style={styles.footerText}>Início</Text>
@@ -15,7 +17,7 @@ export default function UsuarioInferior({ navigation }) {
 
       <TouchableOpacity
         style={styles.footerItem}
-        onPress={() => navigation.navigate("MinhaEscala")}
+        onPress={() => navigation.navigate("InicioAdm", { user })}
       >
         <MaterialIcons name="calendar-month" size={24} color="#fff" />
         <Text style={styles.footerText}>Agenda Anual</Text>
@@ -23,7 +25,7 @@ export default function UsuarioInferior({ navigation }) {
 
       <TouchableOpacity
         style={styles.footerItem}
-        onPress={() => navigation.navigate("PerfilAdm")}
+        onPress={() => navigation.navigate("PerfilAdm", { user })}
       >
         <MaterialIcons name="person" size={24} color="#fff" />
         <Text style={styles.footerText}>Perfil</Text>
@@ -31,6 +33,7 @@ export default function UsuarioInferior({ navigation }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   footer: {

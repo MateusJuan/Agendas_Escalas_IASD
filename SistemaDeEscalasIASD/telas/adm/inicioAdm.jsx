@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,123 +5,105 @@ import {
   TextInput,
   Image,
   ScrollView,
-  TouchableOpacity,
-  Modal,
-  Pressable,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Picker } from '@react-native-picker/picker';
 import AdmInferior from "../barras/adminferior";
+import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// Dados simulados (escalas para vários usuários)
-const escalas = [
-  { data: new Date(2025, 6, 2), ministerio: "Sonoplastia", pessoa: "Mateus" },
-  { data: new Date(2025, 6, 13), ministerio: "Sonoplastia", pessoa: "Mateus" },
-  { data: new Date(2025, 6, 26), ministerio: "Sonoplastia", pessoa: "Mateus" },
-  { data: new Date(2025, 6, 30), ministerio: "Sonoplastia", pessoa: "Mateus" },
+export default function InicioAdm({ navigation, route }) {
+  const [user, setUser] = useState(route.params?.user || null);
+  const [escalas, setEscalas] = useState(null);
+  const [search, setSearch] = useState("");
 
-  { data: new Date(2025, 6, 5), ministerio: "Louvor", pessoa: "João" }, // sábado
-  { data: new Date(2025, 6, 6), ministerio: "Recepção", pessoa: "Maria" }, // domingo
-  { data: new Date(2025, 6, 9), ministerio: "Sonoplastia", pessoa: "Ana" }, // quarta
-];
+  useEffect(() => {
+    async function loadUser() {
+      if (!user) {
+        // tenta carregar do AsyncStorage se não veio na rota
+        try {
+          const jsonValue = await AsyncStorage.getItem("usuarioLogado");
+          if (jsonValue != null) {
+            setUser(JSON.parse(jsonValue));
+          } else {
+            // redireciona para login se não achou usuário
+            Alert.alert("Usuário não encontrado", "Faça login novamente.");
+            navigation.navigate("Login");
+          }
+        } catch (e) {
+          Alert.alert("Erro", "Falha ao carregar usuário.");
+          navigation.navigate("Login");
+        }
+      }
+    }
+    loadUser();
+  }, []);
 
-// Usuários simulados do banco
-const usuarios = [
-  { id: "1", nome: "Mateus" },
-  { id: "2", nome: "João" },
-  { id: "3", nome: "Maria" },
-  { id: "4", nome: "Ana" },
-  { id: "5", nome: "Lucas" },
-];
+  useEffect(() => {
+    async function carregarEscalas() {
+      try {
+        const res = await fetch(
+          "https://agendas-escalas-iasd-backend.onrender.com/api/escalas"
+        );
+        const data = await res.json();
 
-const MEU_NOME = "Mateus"; // nome fixo para filtrar "Minha Escala"
+        const escalasComData = data.map((e) => ({
+          ...e,
+          data: new Date(e.data),
+        }));
 
-function getProximaEscala(escalas) {
+        setEscalas(escalasComData);
+      } catch (error) {
+        Alert.alert("Erro", "Não foi possível carregar as escalas.");
+        setEscalas([]);
+      }
+    }
+    carregarEscalas();
+  }, []);
+
+  if (!user || !user.id) {
+    return (
+      <View style={styles.container}>
+        <Text style={{ marginTop: 50, textAlign: "center" }}>
+          Usuário não encontrado. Por favor, faça login novamente.
+        </Text>
+      </View>
+    );
+  }
+
+  if (escalas === null) {
+    return (
+      <View
+        style={[styles.container, { justifyContent: "center", alignItems: "center" }]}
+      >
+        <ActivityIndicator size="large" color="#2e3e4e" />
+      </View>
+    );
+  }
+
   const hoje = new Date();
-  const futuras = escalas
-    .filter((item) => item.data >= hoje && item.pessoa === MEU_NOME)
-    .sort((a, b) => a.data - b.data);
-  return futuras[0] || null;
-}
+  const mesAtual = hoje.getMonth();
+  const anoAtual = hoje.getFullYear();
 
-// Função para filtrar dias de sábado, domingo e quarta
-function ehDiaImportante(data) {
-  const diaSemana = data.getDay(); // 0=domingo ... 3=quarta ... 6=sábado
-  return diaSemana === 0 || diaSemana === 3 || diaSemana === 6;
-}
-
-export default function InicioUsuario({ navigation }) {
-  const proxima = getProximaEscala(escalas);
-
-  // Estado para controlar pop-up e formulário
-  const [modalVisible, setModalVisible] = useState(false);
-  const [usuarioSelecionado, setUsuarioSelecionado] = useState(""); // guarda nome do usuário selecionado no Picker
-  const [ministerioInput, setMinisterioInput] = useState("");
-  const [diaSelecionado, setDiaSelecionado] = useState(null); // dia clicado para adicionar escala
-
-  // Filtrar escalas do mês atual para minha escala (apenas meu nome)
-  const minhaEscala = escalas.filter(
-    (item) =>
-      item.pessoa === MEU_NOME &&
-      item.data.getMonth() === 6 && // Julho (mês 6 zero-based)
-      item.data.getFullYear() === 2025
+  const escalasUsuarioMes = escalas.filter(
+    (e) =>
+      e.pessoa_id === user.id &&
+      e.data.getMonth() === mesAtual &&
+      e.data.getFullYear() === anoAtual
   );
 
-  // Filtrar escalas do mês para dias sáb, dom e qua (Escala Geral)
-  const escalasMes = [];
-  for (let d = 1; d <= 31; d++) {
-    const data = new Date(2025, 6, d);
-    if (data.getMonth() !== 6) break; // só julho
-    if (!ehDiaImportante(data)) continue;
+  const futuras = escalasUsuarioMes.filter((e) => e.data >= hoje);
+  futuras.sort((a, b) => a.data - b.data);
+  const proxima = futuras[0] || escalasUsuarioMes[0] || null;
 
-    // Buscar escalas nesse dia (podem ter vários)
-    const escalasDoDia = escalas.filter(
-      (item) =>
-        item.data.getDate() === d &&
-        item.data.getMonth() === 6 &&
-        item.data.getFullYear() === 2025
-    );
+  const escalasGeralMes = escalas.filter(
+    (e) => e.data.getMonth() === mesAtual && e.data.getFullYear() === anoAtual
+  );
 
-    escalasMes.push({
-      data,
-      escalasDoDia,
-    });
-  }
-
-  // Função para abrir pop-up para adicionar escala em dia vazio
-  function abrirAdicionarEscala(diaObj) {
-    setDiaSelecionado(diaObj);
-    setUsuarioSelecionado("");
-    setMinisterioInput("");
-    setModalVisible(true);
-  }
-
-  // Função para salvar nova escala (simulação)
-  function salvarEscala() {
-    if (!diaSelecionado || !ministerioInput.trim() || !usuarioSelecionado.trim()) {
-      alert("Informe usuário e ministério");
-      return;
-    }
-
-    // Encontrar usuário pelo nome da busca
-    const usuarioExiste = usuarios.find(
-      (u) => u.nome === usuarioSelecionado
-    );
-    if (!usuarioExiste) {
-      alert("Usuário não encontrado na lista");
-      return;
-    }
-
-    // Aqui deveria salvar no backend, mas vamos só simular
-    escalas.push({
-      data: diaSelecionado.data,
-      ministerio: ministerioInput.trim(),
-      pessoa: usuarioSelecionado,
-    });
-
-    alert("Escala adicionada!");
-    setModalVisible(false);
-  }
+  const escalasFiltradas = escalasUsuarioMes.filter((e) =>
+    e.ministerio.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <View style={styles.container}>
@@ -140,17 +121,13 @@ export default function InicioUsuario({ navigation }) {
             style={styles.searchIcon}
           />
           <TextInput
-            placeholder="Pesquise aqui..."
+            placeholder="Pesquisar ministério"
             placeholderTextColor="#6c6c6c"
             style={styles.input}
+            value={search}
+            onChangeText={setSearch}
           />
         </View>
-        <Image
-          source={{
-            uri: "https://www.gravatar.com/avatar/?d=mp",
-          }}
-          style={styles.avatar}
-        />
       </View>
 
       {/* CARD COM PRÓXIMA ESCALA */}
@@ -161,9 +138,7 @@ export default function InicioUsuario({ navigation }) {
             <View style={styles.cardItemText}>
               <Text style={styles.cardTitle}>Próximo Dia Escalado</Text>
               <Text style={styles.cardDate}>
-                {proxima
-                  ? proxima.data.toLocaleDateString("pt-BR")
-                  : "Nenhuma escala futura"}
+                {proxima ? proxima.data.toLocaleDateString("pt-BR") : "-"}
               </Text>
             </View>
           </View>
@@ -171,151 +146,80 @@ export default function InicioUsuario({ navigation }) {
             <MaterialIcons name="church" size={24} color="#fff" />
             <View style={styles.cardItemText}>
               <Text style={styles.cardTitle}>Ministério</Text>
-              <Text style={styles.cardDate}>{proxima ? proxima.ministerio : "-"}</Text>
+              <Text style={styles.cardDate}>
+                {proxima ? proxima.ministerio : "-"}
+              </Text>
             </View>
           </View>
         </View>
       </View>
 
-      {/* Minha Escala Mensal */}
+      {/* MINHA ESCALA MENSAL */}
       <Text style={styles.escalaTexto}>Minha Escala Mensal:</Text>
-
       <View style={styles.tabela}>
         <View style={styles.tabelaLinhaHeader}>
-          <Text style={[styles.tabelaHeaderTexto, { flex: 1 }]}>MÊS</Text>
-          <Text style={[styles.tabelaHeaderTexto, { flex: 1 }]}>DIA</Text>
-          <Text style={[styles.tabelaHeaderTexto, { flex: 1 }]}>MINISTÉRIO</Text>
+          <Text style={styles.tabelaHeaderTexto}>MÊS</Text>
+          <Text style={styles.tabelaHeaderTexto}>DIA</Text>
+          <Text style={styles.tabelaHeaderTexto}>MINISTÉRIO</Text>
         </View>
+        <ScrollView style={{ maxHeight: 200 }}>
+          {escalasFiltradas.length === 0 && (
+            <Text style={{ padding: 8, textAlign: "center" }}>
+              Nenhuma escala encontrada.
+            </Text>
+          )}
+          {escalasFiltradas.map((item, index) => {
+            const dataObj = item.data;
+            const mes = dataObj.toLocaleDateString("pt-BR", { month: "long" });
+            const dia = dataObj.getDate();
 
-        <ScrollView style={{ maxHeight: 150 }}>
-          {minhaEscala.map((item, index) => {
-            const mesNome = item.data.toLocaleDateString("pt-BR", {
-              month: "long",
-            });
-            const dia = item.data.getDate();
             return (
               <View key={index} style={styles.tabelaLinha}>
-                <Text style={[styles.tabelaTexto, { flex: 1 }]}>
-                  {mesNome.charAt(0).toUpperCase() + mesNome.slice(1)}
+                <Text style={styles.tabelaTexto}>
+                  {mes.charAt(0).toUpperCase() + mes.slice(1)}
                 </Text>
-                <Text style={[styles.tabelaTexto, { flex: 1 }]}>{dia}</Text>
-                <Text style={[styles.tabelaTexto, { flex: 1 }]}>{item.ministerio}</Text>
+                <Text style={styles.tabelaTexto}>{dia}</Text>
+                <Text style={styles.tabelaTexto}>{item.ministerio}</Text>
               </View>
             );
           })}
-          {minhaEscala.length === 0 && (
-            <Text style={{ padding: 8, textAlign: "center" }}>
-              Nenhuma escala neste mês.
-            </Text>
-          )}
         </ScrollView>
       </View>
 
-      {/* Escala Geral do Mês */}
+      {/* ESCALA GERAL DO MÊS */}
       <Text style={styles.escalaTexto}>Escala Geral do Mês:</Text>
-
       <View style={styles.tabela}>
         <View style={styles.tabelaLinhaHeader}>
-          <Text style={[styles.tabelaHeaderTexto, { flex: 1 }]}>MÊS</Text>
-          <Text style={[styles.tabelaHeaderTexto, { flex: 1 }]}>DIA</Text>
-          <Text style={[styles.tabelaHeaderTexto, { flex: 1 }]}>PESSOA</Text>
+          <Text style={styles.tabelaHeaderTexto}>MÊS</Text>
+          <Text style={styles.tabelaHeaderTexto}>DIA</Text>
+          <Text style={styles.tabelaHeaderTexto}>PESSOA</Text>
         </View>
-
         <ScrollView style={{ maxHeight: 200 }}>
-          {escalasMes.map(({ data, escalasDoDia }, index) => {
-            const mesNome = data.toLocaleDateString("pt-BR", {
-              month: "long",
-            });
-            const dia = data.getDate();
+          {escalasGeralMes.length === 0 && (
+            <Text style={{ padding: 8, textAlign: "center" }}>
+              Nenhuma escala encontrada.
+            </Text>
+          )}
+          {escalasGeralMes.map((item, index) => {
+            const dataObj = item.data;
+            const mes = dataObj.toLocaleDateString("pt-BR", { month: "long" });
+            const dia = dataObj.getDate();
 
-            if (escalasDoDia.length === 0) {
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.tabelaLinha, { backgroundColor: "#a4a4a4" }]}
-                  onPress={() => abrirAdicionarEscala({ data })}
-                >
-                  <Text style={[styles.tabelaTexto, { flex: 3, color: "blue" }]}>
-                    Clique aqui para adicionar alguém
-                  </Text>
-                </TouchableOpacity>
-              );
-            }
-
-            return escalasDoDia.map((escala, idx) => (
-              <View key={`${index}-${idx}`} style={styles.tabelaLinha}>
-                <Text style={[styles.tabelaTexto, { flex: 1 }]}>
-                  {mesNome.charAt(0).toUpperCase() + mesNome.slice(1)}
+            return (
+              <View key={index} style={styles.tabelaLinha}>
+                <Text style={styles.tabelaTexto}>
+                  {mes.charAt(0).toUpperCase() + mes.slice(1)}
                 </Text>
-                <Text style={[styles.tabelaTexto, { flex: 1 }]}>{dia}</Text>
-                <Text style={[styles.tabelaTexto, { flex: 1 }]}>{escala.pessoa}</Text>
+                <Text style={styles.tabelaTexto}>{dia}</Text>
+                <Text style={styles.tabelaTexto}>{item.pessoa_nome}</Text>
               </View>
-            ));
+            );
           })}
         </ScrollView>
       </View>
 
-      {/* POP-UP MODAL */}
-      <Modal
-        visible={modalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Adicionar Escala</Text>
-            <Text style={{ marginTop: 10 }}>
-              Dia: {diaSelecionado ? diaSelecionado.data.toLocaleDateString("pt-BR") : ""}
-            </Text>
-
-            {/* Picker para escolher usuário */}
-            <Picker
-              selectedValue={usuarioSelecionado}
-              onValueChange={(itemValue) => setUsuarioSelecionado(itemValue)}
-              style={styles.picker}
-            >
-              <Picker.Item label="Selecione um usuário..." value="" />
-              {usuarios.map((u) => (
-                <Picker.Item key={u.id} label={u.nome} value={u.nome} />
-              ))}
-            </Picker>
-
-            {/* Input ministério */}
-            <TextInput
-              placeholder="Digite o ministério"
-              style={styles.inputModal}
-              value={ministerioInput}
-              onChangeText={setMinisterioInput}
-            />
-
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-around",
-                marginTop: 20,
-              }}
-            >
-              <Pressable
-                style={[styles.botaoModal, { backgroundColor: "#2e3e4e" }]}
-                onPress={salvarEscala}
-              >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>Salvar</Text>
-              </Pressable>
-
-              <Pressable
-                style={[styles.botaoModal, { backgroundColor: "#aaa" }]}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text>Cancelar</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
       {/* RODAPÉ */}
-      <AdmInferior navigation={navigation} />
+      <AdmInferior navigation={navigation} route={{ params: { user } }} />
     </View>
   );
 }
@@ -339,11 +243,6 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     resizeMode: "contain",
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
   },
   searchContainer: {
     flexDirection: "row",
@@ -406,6 +305,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     borderRadius: 8,
     overflow: "hidden",
+    backgroundColor: "#a4a4a4",
   },
   tabelaLinhaHeader: {
     flexDirection: "row",
@@ -414,7 +314,7 @@ const styles = StyleSheet.create({
   },
   tabelaLinha: {
     flexDirection: "row",
-    backgroundColor: "#a4a4a4",
+    backgroundColor: "#e0dede",
     padding: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#fff",
@@ -430,40 +330,6 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
     fontSize: 12,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    paddingHorizontal: 20,
-  },
-  modalContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 20,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontWeight: "bold",
-    fontSize: 18,
-    textAlign: "center",
-  },
-  inputModal: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    marginTop: 10,
-    height: 40,
-  },
-  picker: {
-    marginTop: 10,
-    height: 50,
-    width: "100%",
-  },
-  botaoModal: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    color: "#000",
   },
 });
