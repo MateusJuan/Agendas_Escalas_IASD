@@ -4,7 +4,11 @@
     "slug": "SistemaDeEscalasIASD",
     "version": "1.0.0",
     "sdkVersion": "53.0.0",
-    "platforms": ["ios", "android", "web"],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
     "icon": "img/Logo Circular.png",
     "splash": {
       "image": "img/Logo Circular.png",
@@ -18,6 +22,9 @@
       "eas": {
         "projectId": "10c2f9c8-bf93-4271-878e-6cb847d54c62"
       }
+    },
+    "android": {
+      "package": "com.matewx_j.SistemaDeEscalasIASD"
     }
   }
 }

@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.mateus.sistemaescalasiasd'
+    namespace 'com.matewx_j.SistemaDeEscalasIASD'
     defaultConfig {
-        applicationId 'com.mateus.sistemaescalasiasd'
+        applicationId 'com.matewx_j.SistemaDeEscalasIASD'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
