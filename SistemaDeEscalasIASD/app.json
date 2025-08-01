@@ -3,6 +3,14 @@
     "name": "SistemaDeEscalasIASD",
     "slug": "SistemaDeEscalasIASD",
     "version": "1.0.0",
+    "sdkVersion": "53.0.0",
+    "platforms": ["ios", "android", "web"],
+    "icon": "img/Logo Circular.png",
+    "splash": {
+      "image": "img/Logo Circular.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "web": {
       "favicon": "img/Logo Circular.png"
     },
