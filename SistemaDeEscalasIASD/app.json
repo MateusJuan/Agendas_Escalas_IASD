@@ -3,21 +3,8 @@
     "name": "SistemaDeEscalasIASD",
     "slug": "SistemaDeEscalasIASD",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "img/Logo Circular.png",
-    "splash": {
-      "image": "img/Logo Circular.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "img/Logo Circular.png",
-        "backgroundColor": "#FFFFFF"
-      }
-    },
     "web": {
-      "favicon": "./img/favicon.png"
+      "favicon": "img/Logo Circular.png"
     },
     "extra": {
       "eas": {

@@ -49,7 +49,7 @@ export default function CriarConta({ navigation }) {
       <Text style={styles.label}>NOME</Text>
       <TextInput
         style={styles.input}
-        placeholder="Jana Martín"
+        placeholder="Nome Sobrenome"
         value={nome}
         onChangeText={setNome}
       />
@@ -57,7 +57,7 @@ export default function CriarConta({ navigation }) {
       <Text style={styles.label}>EMAIL</Text>
       <TextInput
         style={styles.input}
-        placeholder="hola@unsitiogenial.es"
+        placeholder="teste@gmail.com"
         keyboardType="email-address"
         autoCapitalize="none"
         value={email}

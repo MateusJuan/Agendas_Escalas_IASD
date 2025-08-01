@@ -1,4 +1,4 @@
-package com.sistemadeescalasiasd
+package com.mateus.sistemaescalasiasd
 
 import android.app.Application
 import android.content.res.Configuration
