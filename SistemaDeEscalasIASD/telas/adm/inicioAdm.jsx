@@ -7,7 +7,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Modal,
   TouchableOpacity,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -23,8 +22,12 @@ export default function InicioAdm({ navigation, route }) {
   // Modal
   const [modalVisible, setModalVisible] = useState(false);
   const [novaData, setNovaData] = useState("");
-  const [novoUsuarioId, setNovoUsuarioId] = useState("");
   const [novoMinisterio, setNovoMinisterio] = useState("");
+
+  // Busca por nome
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
+  const [buscaUsuario, setBuscaUsuario] = useState("");
 
   function parseDataBR(dataStr) {
     const [dia, mes, ano] = dataStr.split("/");
@@ -69,24 +72,42 @@ export default function InicioAdm({ navigation, route }) {
       }
     }
     carregarEscalas();
-  }, [modalVisible]); // recarrega ao fechar o modal
+  }, [modalVisible]);
+
+  useEffect(() => {
+    async function carregarUsuarios() {
+      try {
+        const res = await fetch(
+          "https://agendas-escalas-iasd-backend.onrender.com/api/usuarios"
+        );
+        const data = await res.json();
+        setUsuarios(data);
+      } catch (e) {
+        Alert.alert("Erro", "Não foi possível carregar os usuários.");
+      }
+    }
+    carregarUsuarios();
+  }, []);
 
   async function adicionarEscala() {
-    if (!novaData || !novoUsuarioId || !novoMinisterio) {
-      Alert.alert("Erro", "Preencha todos os campos.");
+    if (!novaData || !usuarioSelecionado || !novoMinisterio) {
+      Alert.alert("Erro", "Preencha todos os campos e selecione um usuário.");
       return;
     }
 
     try {
-      const res = await fetch("https://agendas-escalas-iasd-backend.onrender.com/api/escalas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: novaData,
-          ministerio: novoMinisterio,
-          pessoa_id: parseInt(novoUsuarioId),
-        }),
-      });
+      const res = await fetch(
+        "https://agendas-escalas-iasd-backend.onrender.com/api/escalas",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            data: novaData,
+            ministerio: novoMinisterio,
+            pessoa_id: usuarioSelecionado.id,
+          }),
+        }
+      );
 
       const result = await res.json();
 
@@ -94,8 +115,9 @@ export default function InicioAdm({ navigation, route }) {
         Alert.alert("Sucesso", "Escala adicionada com sucesso!");
         setModalVisible(false);
         setNovaData("");
-        setNovoUsuarioId("");
         setNovoMinisterio("");
+        setBuscaUsuario("");
+        setUsuarioSelecionado(null);
       } else {
         Alert.alert("Erro", result.error || "Falha ao adicionar escala.");
       }
@@ -144,6 +166,8 @@ export default function InicioAdm({ navigation, route }) {
   const escalasFiltradas = escalasUsuarioMes.filter((e) =>
     e.ministerio.toLowerCase().includes(search.toLowerCase())
   );
+escalasFiltradas.sort((a, b) => a.data.getDate() - b.data.getDate());
+escalasGeralMes.sort((a, b) => a.data.getDate() - b.data.getDate());
 
   return (
     <View style={styles.container}>
@@ -268,22 +292,60 @@ export default function InicioAdm({ navigation, route }) {
           <View style={styles.modalContent}>
             <Text style={{ fontSize: 16, fontWeight: "bold", marginBottom: 10 }}>Adicionar Escala</Text>
 
-            <Text>Data (yyyy-mm-dd):</Text>
+            <Text>Data (dd/mm/aaaa):</Text>
             <TextInput
               value={novaData}
               onChangeText={setNovaData}
-              placeholder="Ex: 2025-08-10"
+              placeholder="Ex: 02/10/2025"
               style={styles.modalInput}
             />
 
-            <Text>ID do Usuário:</Text>
+            <Text>Nome do Usuário:</Text>
             <TextInput
-              value={novoUsuarioId}
-              onChangeText={setNovoUsuarioId}
-              placeholder="Ex: 6"
-              keyboardType="numeric"
+              value={buscaUsuario}
+              onChangeText={(text) => {
+                setBuscaUsuario(text);
+                setUsuarioSelecionado(null); // limpa seleção anterior
+              }}
+              placeholder="Digite o nome"
               style={styles.modalInput}
             />
+
+            {/* Lista de sugestões aparece enquanto digita */}
+            {buscaUsuario.length > 0 && !usuarioSelecionado && (
+              <ScrollView
+                style={{
+                  maxHeight: 100,
+                  marginBottom: 10,
+                  borderWidth: 1,
+                  borderColor: "#ccc",
+                  borderRadius: 5,
+                  backgroundColor: "#f9f9f9",
+                }}
+              >
+                {usuarios
+                  .filter((u) =>
+                    u.nome.toLowerCase().includes(buscaUsuario.toLowerCase())
+                  )
+                  .map((u) => (
+                    <TouchableOpacity
+                      key={u.id}
+                      onPress={() => {
+                        setUsuarioSelecionado(u);
+                        setBuscaUsuario(u.nome);
+                      }}
+                      style={{
+                        paddingVertical: 8,
+                        paddingHorizontal: 10,
+                        borderBottomWidth: 1,
+                        borderBottomColor: "#ddd",
+                      }}
+                    >
+                      <Text>{u.nome}</Text>
+                    </TouchableOpacity>
+                  ))}
+              </ScrollView>
+            )}
 
             <Text>Ministério:</Text>
             <TextInput
@@ -300,7 +362,6 @@ export default function InicioAdm({ navigation, route }) {
           </View>
         </View>
       )}
-
       {/* RODAPÉ */}
       <AdmInferior navigation={navigation} route={{ params: { user } }} />
     </View>

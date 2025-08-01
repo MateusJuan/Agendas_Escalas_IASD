@@ -101,6 +101,8 @@ export default function InicioUsuario({ navigation, route }) {
     e.ministerio.toLowerCase().includes(search.toLowerCase())
   );
 
+  escalasFiltradas.sort((a, b) => a.data.getDate() - b.data.getDate());
+  
   return (
     <View style={styles.container}>
       {/* TOPO */}
