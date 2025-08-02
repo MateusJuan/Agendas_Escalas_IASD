@@ -9,7 +9,7 @@ import {
   Alert,
   SafeAreaView,
 } from "react-native";
-import { TextInputMask } from "react-native-masked-text";
+import { TextInputMask } from 'react-native-masked-text';
 import axios from "axios";
 import { Feather } from "@expo/vector-icons";
 
