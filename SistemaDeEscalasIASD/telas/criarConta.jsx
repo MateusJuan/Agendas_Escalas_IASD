@@ -86,7 +86,7 @@ export default function CriarConta({ navigation }) {
       </View>
 
       <Text style={styles.label}>DATA DE NASCIMENTO</Text>
-      <TextInputMask
+      <MaskedTextInput
         type={"datetime"}
         options={{ format: "DD/MM/YYYY" }}
         style={styles.input}
