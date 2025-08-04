@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import UsuarioInferior from "../barras/usuarioinferior";
 import axios from "axios";
 
+
 export default function Perfil({ navigation }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);

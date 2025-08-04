@@ -9,7 +9,7 @@ import {
   Alert,
   SafeAreaView,
 } from "react-native";
-import { TextInputMask } from 'react-native-masked-text';
+import { MaskedTextInput } from 'react-native-mask-text';
 import axios from "axios";
 import { Feather } from "@expo/vector-icons";
 
@@ -86,7 +86,7 @@ export default function CriarConta({ navigation }) {
       </View>
 
       <Text style={styles.label}>DATA DE NASCIMENTO</Text>
-      <TextInputMask
+      <MaskedTextInput
         type={"datetime"}
         options={{ format: "DD/MM/YYYY" }}
         style={styles.input}

@@ -5,6 +5,14 @@
     "version": "1.0.0",
     "android": {
       "package": "com.matewx_j.SistemaDeEscalasIASD"
-    }
+    },
+    "plugins": [
+      [
+        "expo-system-ui",
+        {
+          "edgeToEdge": true
+        }
+      ]
+    ]
   }
 }
