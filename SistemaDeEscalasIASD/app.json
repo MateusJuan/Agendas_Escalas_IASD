@@ -13,6 +13,11 @@
           "edgeToEdge": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "10c2f9c8-bf93-4271-878e-6cb847d54c62"
+      }
+    }
   }
 }

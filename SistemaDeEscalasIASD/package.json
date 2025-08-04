@@ -33,16 +33,11 @@
     "@babel/core": "^7.20.0"
   },
   "private": true,
-  "expo.doctor": {
-    "reactNativeDirectoryCheck": {
-      "exclude": [
-        "react-native-elements",
-        "react-native-vector-icons",
-        "tslib",
-        "react-native-text-input-mask",
-        "react-native-masked-text"
-      ],
-      "listUnknownPackages": false
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false
+      }
     }
   }
 }
