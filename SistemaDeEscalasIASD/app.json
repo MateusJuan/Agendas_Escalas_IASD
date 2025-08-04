@@ -5,11 +5,6 @@
     "version": "1.0.0",
     "android": {
       "package": "com.matewx_j.SistemaDeEscalasIASD"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "10c2f9c8-bf93-4271-878e-6cb847d54c62"
-      }
     }
   }
 }
